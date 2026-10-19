@@ -33,12 +33,14 @@ interface Props {
 	dimmed?: boolean;
 	onHover?: () => void;
 	onActivate?: () => void;
+	/** Local patch: horizontal push (px) away from the focused card */
+	shift?: number;
 }
 
-export function Tile ({model, focused, near, lifted, checked, dimmed, onHover, onActivate}: Props) {
+export function Tile ({model, focused, near, lifted, checked, dimmed, onHover, onActivate, shift}: Props) {
 	const classes = ['tile', focused && 'tile--focused', near && 'tile--near', lifted && 'tile--lifted', dimmed && 'tile--dimmed'].filter(Boolean).join(' ');
 	return (
-		<div class={classes} onMouseEnter={onHover} onClick={onActivate}>
+		<div class={classes} style={shift !== undefined ? {transform: `translateX(${shift}px)`} : undefined} onMouseEnter={onHover} onClick={onActivate}>
 			<div class="tile__box" style={model.color && !model.imageUrl ? {background: model.color} : undefined}>
 				{model.imageUrl
 					? <img class="tile__image" src={model.imageUrl} alt="" />

@@ -592,3 +592,20 @@ html, body {
 .editor__done--focused { background: #fff; color: #111; transform: scale(1.06); }
 .editor__hint { margin-left: 30px; font-size: 19px; color: rgba(255, 255, 255, 0.55); }
 
+
+/* ---------- Local patch (Edward): no shadows on input cards ---------- */
+.row--wide .tile__box,
+.row--wide .tile--near .tile__box { box-shadow: none; filter: none; }
+.row--wide .tile--focused .tile__box,
+.app--lite .row--wide .tile--focused .tile__box { box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.95); filter: none; }
+.row--wide .tile__box:after { display: none; }
+.row--wide .tile__label { text-shadow: none; }
+
+/* ---------- Local patch (Edward): hide input card name labels (kept in DOM) ---------- */
+.row--wide .tile__label { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.row--wide .tile { margin-bottom: 0; }
+
+/* ---------- Local patch (Edward): only focused input card scales; neighbours spread ---------- */
+.row--wide .tile--near .tile__box { transform: none; }
+.row--wide .tile { transition: transform 300ms var(--ease); will-change: transform; }
+.row--wide .row__track { padding: 0 48px; }

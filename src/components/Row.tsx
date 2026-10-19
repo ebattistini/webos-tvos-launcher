@@ -16,6 +16,9 @@ interface Props {
 	onActivate: (index: number) => void;
 }
 
+/** Local patch (Edward): input-card spread = half the focus growth (248*0.14/2≈17) + 25 breathing room */
+const SPREAD_PX = 42;
+
 const VIEWPORT_WIDTH = LAYOUT.screenWidth - 2 * LAYOUT.edgePadding;
 
 /** Horizontal strip of tiles. Centred when it fits; otherwise a carousel that keeps
@@ -43,6 +46,7 @@ export function Row ({label, items, focused, selected, emptyText, large, wide, o
 								near={focused && Math.abs(i - selected) === 1}
 								onHover={() => onSelect(i)}
 								onActivate={() => onActivate(i)}
+								shift={wide ? (focused && i !== selected ? (i < selected ? -SPREAD_PX : SPREAD_PX) : 0) : undefined}
 							/>
 						))}
 					</div>}

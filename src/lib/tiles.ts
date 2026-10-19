@@ -3,6 +3,7 @@
 import type {AppEntry} from './apps';
 import type {InputSource} from './inputs';
 import type {TileModel} from '../components/Tile';
+import {inputArtFor} from '../config/inputArt';
 
 const INPUT_ICON_DIR = 'icons/inputs/';
 
@@ -11,7 +12,16 @@ export function appTile (app: AppEntry): TileModel {
 }
 
 export function inputTile (input: InputSource): TileModel {
-	return {key: input.appId, label: input.label, glyphImageUrl: INPUT_ICON_DIR + input.icon, subtitle: input.appId === 'com.webos.app.livetv' ? 'Antenna and cable' : input.connected ? 'Connected' : 'Nothing connected'};
+	const art = inputArtFor(input.id, input.appId);
+	const label = (art && art.label) || input.label;
+	const subtitle = input.appId === 'com.webos.app.livetv'
+		? 'Antenna and cable'
+		: input.connected ? 'Connected' : 'Nothing connected';
+	if (art) {
+		// Full-bleed card art (Apple TV–style); falls back to LG glyph if file missing at runtime.
+		return {key: input.appId, label, imageUrl: art.image, subtitle};
+	}
+	return {key: input.appId, label, glyphImageUrl: INPUT_ICON_DIR + input.icon, subtitle};
 }
 
 /** Order `items` by an ID list, dropping IDs that no longer exist. */

@@ -52,7 +52,7 @@ interface PinRequest {
 const LAST_SEEN_KEY = 'launcher-last-seen';
 
 /** When the launcher was last on screen (epoch ms; 0 if never). */
-function lastSeen (): number {
+export function lastSeen (): number {
 	try { return Number(localStorage.getItem(LAST_SEEN_KEY)) || 0; } catch { return 0; }
 }
 
@@ -90,8 +90,7 @@ export function App () {
 	// whenever an app opens), so a fresh start is often just a return from Netflix. Ask
 	// "Who's Watching?" only after a long time away, measured from when we were last seen.
 	const [screen, setScreen] = useState<Screen>(() => {
-		if (!loadHousehold().askOnLaunch) return 'home';
-		return Date.now() - lastSeen() > TIMING.pickerAfterAwayMs ? 'picker' : 'home';
+		return 'home';   // Local patch (Edward): no Who's Watching picker
 	});
 	const [apps, setApps] = useState<AppEntry[]>([]);
 	const [inputs, setInputs] = useState<InputSource[]>([]);
@@ -102,14 +101,14 @@ export function App () {
 	const [hour, setHour] = useState(() => new Date().getHours());
 	const [device, setDevice] = useState<DeviceInfo | null>(null);
 	const [devMode, setDevMode] = useState<DevModeState>(readDevModeState);
-	const [network, setNetwork] = useState<NetworkState>({kind: 'wifi', label: 'Wi-Fi'});
+	const [, setNetwork] = useState<NetworkState>({kind: 'wifi', label: 'Wi-Fi'});
 	/** bumps when a new NASA picture of the day has loaded */
 	const [apodVersion, setApodVersion] = useState(0);
 	const [profilesEntry, setProfilesEntry] = useState<{id?: string; editName?: boolean; back: Screen}>({back: 'home'});
 	const toastTimer = useRef(0);
 	const lastInput = useRef(Date.now());
 
-	const profile = activeProfile(household);
+	const profile = {...activeProfile(household), kids: false};   // Local patch (Edward): never Kids
 
 	const showToast = useCallback((text: string, kind: ToastMessage['kind'] = 'info') => {
 		window.clearTimeout(toastTimer.current);
@@ -174,8 +173,7 @@ export function App () {
 			if (document.hidden) { markSeen(); setSaver(false); return; }
 			refresh();
 			lastInput.current = Date.now();
-			const h = loadHousehold();
-			if (h.askOnLaunch && Date.now() - lastSeen() > TIMING.pickerAfterAwayMs) setScreen('picker');
+			/* Local patch (Edward): picker disabled */
 			markSeen();
 		};
 		document.addEventListener('visibilitychange', onVisibility);
@@ -229,19 +227,24 @@ export function App () {
 	);
 
 	const rows: HomeRow[] = useMemo(() => {
-		const list: HomeRow[] = [{id: ROW.apps, label: profile.kids ? 'My Apps' : 'Favourites', items: shownApps.map(appTile), emptyText: 'No apps yet. Add some in Settings.', dock: true}];
-		if (!profile.kids) list.push({id: ROW.sources, label: 'Inputs', items: shownInputs.map(inputTile), emptyText: 'No inputs selected', wide: true});
+		// Local patch (Edward): hide Favourites/apps dock; inputs-only over wallpaper.
+		// Settings → Favourites still works; restore the apps push below to bring the dock back.
+		const list: HomeRow[] = [];
+		// list.push({id: ROW.apps, label: profile.kids ? 'My Apps' : 'Favourites', items: shownApps.map(appTile), emptyText: 'No apps yet. Add some in Settings.', dock: true});
+		if (profile.kids) {
+			list.push({id: ROW.apps, label: 'My Apps', items: shownApps.map(appTile), emptyText: 'No apps yet. Add some in Settings.', dock: true});
+		} else {
+			list.push({id: ROW.sources, label: 'Inputs', items: shownInputs.map(inputTile), emptyText: 'No inputs selected', wide: true});
+		}
 		return list;
 	}, [shownApps, shownInputs, profile.kids]);
 
 	const actions: TopAction[] = profile.kids
 		? [{key: ACTION.profile, label: 'Switch profile', glyph: 'people'}]
 		: [
+			// Local patch (Edward): no Wallpapers / Wi-Fi / profile pills
 			{key: ACTION.apps, label: 'All Apps', glyph: 'grid'},
-			{key: ACTION.wallpapers, label: 'Wallpapers', glyph: 'image'},
-			{key: ACTION.network, label: network.label, glyph: network.kind === 'offline' ? 'offline' : 'wifi'},
-			{key: ACTION.settings, label: 'Settings', glyph: 'gear'},
-			{key: ACTION.profile, label: 'Switch profile', glyph: 'people'}
+			{key: ACTION.settings, label: 'Settings', glyph: 'gear'}
 		];
 
 	const tabs: SettingsTab[] = useMemo(() => [
@@ -250,6 +253,7 @@ export function App () {
 	], [apps, inputs, shownApps, shownInputs]);
 
 	const options: OptionItem[] = [
+		{id: 'wallpapers', section: 'Wallpaper', label: 'Wallpapers', description: 'Choose the home-screen wallpaper (NASA photos and more).', value: null},
 		{id: 'rotation', section: `Appearance · ${profile.name}`, label: 'Wallpaper rotation', description: 'Change the wallpaper automatically: your favourites when you have two or more, otherwise the NASA photos.', value: ROTATION_LABEL[profile.rotation]},
 		{id: 'dim', label: 'Wallpaper dimming', description: 'Darkens the wallpaper behind the interface.', value: `${profile.dim}%`},
 		{id: 'appearance', label: 'Appearance', description: 'Dark keeps the interface deep and cinematic; Light softens the shading.', value: profile.appearance === 'dark' ? 'Dark' : 'Light'},
@@ -258,9 +262,6 @@ export function App () {
 		{id: 'motion', label: 'Animations', description: 'Slow wallpaper drift, twinkling stars and smooth transitions. Turn off on a slow TV.', value: household.motion},
 		{id: 'glass', label: 'Frosted glass', description: 'Blurred glass behind panels. Costs the most GPU time; turn off if navigation feels slow.', value: household.glass},
 		{id: 'restore', label: 'Restore default favourites', description: 'Puts this profile’s dock back to the original apps and order.', value: null},
-		{id: 'manage', section: 'Profiles', label: 'Manage profiles', description: 'Add, rename and delete profiles; change avatars, colours, Kids mode and the default profile.', value: null},
-		{id: 'ask', label: 'Ask “Who’s Watching?”', description: 'When the launcher opens, and when you come back after four hours away.', value: household.askOnLaunch},
-		{id: 'pin', label: 'Household PIN', description: 'Needed to leave a Kids profile or open settings from one.', value: household.pin ? 'Change' : 'Set'},
 		{id: 'saver', section: 'Screensaver', label: 'Start screensaver after', description: 'A slideshow of NASA photos (or your favourite wallpapers) with a drifting clock. Counts only while the launcher is on screen.', value: household.screensaverMinutes ? `${household.screensaverMinutes} min` : 'Never'},
 		{id: 'devmode', section: 'System', label: 'Keep Developer Mode on', description: describeDevMode(devMode), value: null},
 		{id: 'lg-home', label: 'LG Home', description: 'LG’s own home screen and app bar (the Home button on the remote opens it too).', value: null},
@@ -305,6 +306,7 @@ export function App () {
 
 	const onOption = (id: string) => {
 		switch (id) {
+			case 'wallpapers': setScreen('wallpapers'); break;
 			case 'rotation': patchProfile({rotation: nextOf(ROTATION_ORDER, profile.rotation)}); break;
 			case 'dim': patchProfile({dim: nextOf(DIM_STEPS, profile.dim)}); break;
 			case 'appearance': patchProfile({appearance: profile.appearance === 'dark' ? 'light' : 'dark'}); break;
@@ -421,7 +423,7 @@ export function App () {
 							patchProfile({favoriteWallpapers: toggleId(profile.favoriteWallpapers, id)});
 							showToast(fav ? 'Added to favourites' : 'Removed from favourites');
 						}}
-						onClose={() => { setPreviewId(null); setScreen('home'); }}
+						onClose={() => { setPreviewId(null); setScreen('settings'); }}
 					/>
 				</div>
 			)}
