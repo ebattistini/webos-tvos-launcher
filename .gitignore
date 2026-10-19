@@ -10,3 +10,6 @@ src/config/catalog.local.ts
 .claude/
 public/devmode.json
 backups/
+src/config/inputArt.local.ts
+public/icons/inputs/custom/*
+!public/icons/inputs/custom/README.txt

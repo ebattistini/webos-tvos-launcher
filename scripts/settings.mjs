@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {execSync} from 'node:child_process';
 
-const APP_ID = 'works.partridge.webos-launcher';
+const APP_ID = 'io.github.ebattistini.tvos-launcher';
 const PREFIX = 'launcher-';
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 

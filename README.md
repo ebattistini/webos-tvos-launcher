@@ -1,3 +1,51 @@
+# tvOS Home for webOS (fork)
+
+> **Based on [webos-tvos-launcher](https://github.com/Forlarin/webos-tvos-launcher) by
+> [Forlarin](https://github.com/Forlarin)**, which is built on
+> [partridgeworks/webos-launcher](https://github.com/partridgeworks/webos-launcher). MIT licence,
+> original copyright kept in [LICENSE](LICENSE). All credit for the original launcher goes to them.
+
+A pared-back, Apple TV–style home for LG webOS TVs: your inputs as big cards over NASA
+wallpapers, nothing else in the way.
+
+_Screenshots: TODO_
+
+## What's different from upstream
+- Inputs-only home (apps dock optional: Settings → Options → Show apps dock).
+- Input names come from the TV (Settings → General → Devices → Inputs on the TV).
+- Neutral input artwork by default; add your own per input (below). No brand logos are bundled.
+- Only the focused card grows; its neighbours move aside. No card shadows.
+- No profiles / Kids mode; Wallpapers live in Settings; no Wi-Fi pill.
+- Optional Home-button hook for rooted TVs.
+- App id `io.github.ebattistini.tvos-launcher`, so it can sit alongside upstream.
+
+See [CHANGELOG.md](CHANGELOG.md).
+
+## Install
+- **Rooted TV / Homebrew Channel:** build (`npm install && npm run build && npm run package`), then
+  `TV_HOST=root@<tv-ip> npm run install:tv`, or install `build/*.ipk` from the Homebrew Channel.
+- **Developer Mode:** see the upstream instructions below (`npm run install:devmode`).
+
+## Your own input art
+1. Put 744×420 images in `public/icons/inputs/custom/` (git-ignored).
+2. Copy `src/config/inputArt.local.example.ts` to `src/config/inputArt.local.ts` and map
+   `HDMI_1`…`HDMI_4` / `LIVE_TV` to your files (optionally a `label`).
+3. Rebuild and reinstall. Only use artwork you have the right to use.
+
+## Optional: Home button opens this launcher (root only)
+Copy `root-hook/` to the TV and run `sh install.sh` as root. It adds one Homebrew init.d
+hook (`/var/lib/webosbrew/init.d/50-tvos-home`) that launches the app on Home and at boot.
+Remove with `sh uninstall.sh`, then reboot normally if you like.
+**Do not restart SAM or surface-manager to apply anything; it can black-screen the TV.**
+
+## Uninstall
+Remove the Home hook first (if installed), then remove the app from LG's app bar or:
+`luna-send -n 1 luna://com.webos.appInstallService/dev/remove '{"id":"io.github.ebattistini.tvos-launcher"}'`
+
+---
+
+## Upstream README
+
 # webOS tvOS Launcher
 
 A cinematic, Apple TV–inspired home screen for LG webOS TVs: real NASA wallpapers,

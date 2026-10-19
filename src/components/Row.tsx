@@ -16,7 +16,7 @@ interface Props {
 	onActivate: (index: number) => void;
 }
 
-/** Local patch (Edward): input-card spread = half the focus growth (248*0.14/2≈17) + 25 breathing room */
+/** input-card spread = half the focus growth (248*0.14/2≈17) + 25 breathing room */
 const SPREAD_PX = 42;
 
 const VIEWPORT_WIDTH = LAYOUT.screenWidth - 2 * LAYOUT.edgePadding;

@@ -48,6 +48,8 @@ export interface Household {
 	clockStyle: 'thin' | 'bold';
 	/** read the live app list through the Homebrew Channel (root). Off by default. */
 	useHomebrew: boolean;
+	/** show the Favourites apps dock above the inputs (default off) */
+	showDock: boolean;
 }
 
 export const ACCENTS = ['#7aa6ff', '#ff8a7a', '#5ad0a0', '#ffc65a', '#c08aff', '#5ad0e0', '#ff7ac0', '#d0d0d8'];
@@ -89,7 +91,8 @@ function defaultHousehold (): Household {
 		glass: true,
 		screensaverMinutes: 10,
 		clockStyle: 'thin',
-		useHomebrew: false
+		useHomebrew: false,
+		showDock: false
 	};
 }
 

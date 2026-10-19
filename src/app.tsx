@@ -90,7 +90,7 @@ export function App () {
 	// whenever an app opens), so a fresh start is often just a return from Netflix. Ask
 	// "Who's Watching?" only after a long time away, measured from when we were last seen.
 	const [screen, setScreen] = useState<Screen>(() => {
-		return 'home';   // Local patch (Edward): no Who's Watching picker
+		return 'home';   // no Who's Watching picker
 	});
 	const [apps, setApps] = useState<AppEntry[]>([]);
 	const [inputs, setInputs] = useState<InputSource[]>([]);
@@ -108,7 +108,7 @@ export function App () {
 	const toastTimer = useRef(0);
 	const lastInput = useRef(Date.now());
 
-	const profile = {...activeProfile(household), kids: false};   // Local patch (Edward): never Kids
+	const profile = {...activeProfile(household), kids: false};   // never Kids
 
 	const showToast = useCallback((text: string, kind: ToastMessage['kind'] = 'info') => {
 		window.clearTimeout(toastTimer.current);
@@ -173,7 +173,7 @@ export function App () {
 			if (document.hidden) { markSeen(); setSaver(false); return; }
 			refresh();
 			lastInput.current = Date.now();
-			/* Local patch (Edward): picker disabled */
+			/* picker disabled */
 			markSeen();
 		};
 		document.addEventListener('visibilitychange', onVisibility);
@@ -227,22 +227,17 @@ export function App () {
 	);
 
 	const rows: HomeRow[] = useMemo(() => {
-		// Local patch (Edward): hide Favourites/apps dock; inputs-only over wallpaper.
-		// Settings → Favourites still works; restore the apps push below to bring the dock back.
+		// Fork change: inputs-only home by default; the apps dock is optional (Settings → Show apps dock).
 		const list: HomeRow[] = [];
-		// list.push({id: ROW.apps, label: profile.kids ? 'My Apps' : 'Favourites', items: shownApps.map(appTile), emptyText: 'No apps yet. Add some in Settings.', dock: true});
-		if (profile.kids) {
-			list.push({id: ROW.apps, label: 'My Apps', items: shownApps.map(appTile), emptyText: 'No apps yet. Add some in Settings.', dock: true});
-		} else {
-			list.push({id: ROW.sources, label: 'Inputs', items: shownInputs.map(inputTile), emptyText: 'No inputs selected', wide: true});
-		}
+		if (household.showDock) list.push({id: ROW.apps, label: 'Favourites', items: shownApps.map(appTile), emptyText: 'No apps yet. Add some in Settings.', dock: true});
+		list.push({id: ROW.sources, label: 'Inputs', items: shownInputs.map(inputTile), emptyText: 'No inputs selected', wide: true});
 		return list;
-	}, [shownApps, shownInputs, profile.kids]);
+	}, [shownApps, shownInputs, household.showDock]);
 
 	const actions: TopAction[] = profile.kids
 		? [{key: ACTION.profile, label: 'Switch profile', glyph: 'people'}]
 		: [
-			// Local patch (Edward): no Wallpapers / Wi-Fi / profile pills
+			// no Wallpapers / Wi-Fi / profile pills
 			{key: ACTION.apps, label: 'All Apps', glyph: 'grid'},
 			{key: ACTION.settings, label: 'Settings', glyph: 'gear'}
 		];
@@ -266,6 +261,7 @@ export function App () {
 		{id: 'devmode', section: 'System', label: 'Keep Developer Mode on', description: describeDevMode(devMode), value: null},
 		{id: 'lg-home', label: 'LG Home', description: 'LG’s own home screen and app bar (the Home button on the remote opens it too).', value: null},
 		{id: 'lg-settings', label: 'LG Settings', description: 'Picture, sound, network, inputs and everything else the TV controls.', value: null},
+		{id: 'dock', label: 'Show apps dock', description: 'A row of favourite apps above the inputs.', value: household.showDock === true},
 		{id: 'homebrew', label: 'Live app list via Homebrew Channel', description: 'Rooted TVs only. Lists every installed app with its real icon, using the Homebrew Channel, which runs commands as root.', value: household.useHomebrew},
 		{id: 'about', label: 'About this TV', description: device ? `${device.model} · firmware ${device.firmware} · webOS SDK ${device.sdk}` : 'Model information is not available on this TV.', value: null}
 	];
@@ -318,6 +314,7 @@ export function App () {
 			case 'manage': setProfilesEntry({id: profile.id, back: 'settings'}); setScreen('profiles'); break;
 			case 'ask': commit({...household, askOnLaunch: !household.askOnLaunch}); break;
 			case 'saver': commit({...household, screensaverMinutes: nextOf(SAVER_STEPS, household.screensaverMinutes)}); break;
+			case 'dock': commit({...household, showDock: !household.showDock}); break;
 			case 'homebrew': commit({...household, useHomebrew: !household.useHomebrew}); break;
 			case 'devmode':
 				showToast('Renewing…');

@@ -33,7 +33,7 @@ interface Props {
 	dimmed?: boolean;
 	onHover?: () => void;
 	onActivate?: () => void;
-	/** Local patch: horizontal push (px) away from the focused card */
+	/** horizontal push (px) away from the focused card */
 	shift?: number;
 }
 

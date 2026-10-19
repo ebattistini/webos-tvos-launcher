@@ -1,6 +1,6 @@
 // App-wide constants that are not visual tokens (see theme/tokens.ts for those).
 
-export const APP_ID = 'works.partridge.webos-launcher';
+export const APP_ID = 'io.github.ebattistini.tvos-launcher';
 
 /** webOS app IDs the launcher itself needs. */
 export const SYSTEM_APP = {
